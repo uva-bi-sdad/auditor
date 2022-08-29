@@ -1,5 +1,8 @@
 name: Audit Data Repository # v0.0.1
-on: [push]
+on:
+  push:
+    branches:
+      - 'main'
 jobs:
   book-keeping:
     runs-on: ubuntu-latest
@@ -27,7 +30,7 @@ jobs:
       - name: Source virtual environment
         run: |
           . auditor/env-auditor/bin/activate
-      - name: execute py script # create a manifest with the current directory as root
+      - name: Execut python script # create a manifest with the current directory as root
         run: |
           python auditor/audit.py -i .
       # - name: update the yml file to the newest version on the auditor repo (requires permissions )
@@ -46,4 +49,14 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           force: true
+      - name: Remove bulky data folders, deleting all files within
+        run: |
+          find . -type d -prune -name data -exec rmdir {} \;
+      - name: Push changes # push the data-removed output folder to the public repo
+        uses: ad-m/github-push-action@master
+        with:
+          repository: ${{ github.event.repository.name::-4 }} # Get the repository name minus the last four character
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          force: true
       - run: echo "🍏 This job's status is ${{ job.status }}."
+
