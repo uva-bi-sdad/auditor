@@ -8,3 +8,12 @@ Timeline:
 - **2022-08-29**: Add auditor and test one repo versus two repo models
 - **2022-08-23**: In the generation of the manifest, add in measure info data
 - **2022-08-04**: Check the data repository is created in the right format and create a manifest.json file
+
+Notes:
+---
+- Overleaf notes: https://www.overleaf.com/project/6306378e38071b727de6293e
+
+Action references:
+---
+- Dataverse-uploader action: https://github.com/IQSS/dataverse-uploader
+- Copy files to other repos action: https://github.com/derberg/copy-files-to-other-repositories
