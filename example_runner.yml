@@ -50,9 +50,9 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           force: true
-      - name: Remove all data folders
+      - name: Remove all files not in distribution folders
         run: |
-          find . -type d -name data -prune -exec rm -rf {} \;
+          find . -type d ! -name dist -prune -exec rm -rf {} \;
       - name: Remove github things # Required so that you can push to another directory
         run: |
           rm -rf .git
@@ -65,12 +65,10 @@ jobs:
       - name: Push directory to another repository
         uses: cpina/github-action-push-to-another-repository@main
         env:
-          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }} # You need to create this
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
         with:
           source-directory: .
           destination-github-username: 'uva-bi-sdad'
-          destination-repository-name: 'sdc.broadband-pub'
+          destination-repository-name: 'sdc.broadband'
           target-branch: main
       - run: echo "🍏 This job's status is ${{ job.status }}."
-      
-
