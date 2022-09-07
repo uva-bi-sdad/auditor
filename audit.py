@@ -55,7 +55,8 @@ def evaluate_folder(data, answer, dirpath):
                 else:
                     to_append['measure_info'] = 'No match found'
                     measure_not_found_count += 1
-        data.append(to_append)
+                logging.debug('-' * 80)
+                data.append(to_append)
         answer['measure_not_found'] += measure_not_found_count
 
 
@@ -67,11 +68,18 @@ def search_measure_info(path, measure_info_path):
         measure_info = json.load(f)
 
     keys = measure_info.keys()
-    closest_matches = [key for key in keys if key in path.name]
+    logging.debug(path.name)
+    logging.debug(keys)
+    closest_matches = [key for key in keys if key.split(':')[0] in path.name]
 
-    logging.debug(closest_matches)
     if len(closest_matches) > 0:
-        return measure_info[closest_matches[0]]
+        logging.debug('Closest matches: %s' % closest_matches)
+        matched_keys = [measure_info[match] for match in closest_matches]
+        logging.debug('Matched keys found: %s' % matched_keys)
+        return matched_keys
+    else:
+        logging.debug('No matches found!')
+        return
 
 
 def main(root, test=False):
