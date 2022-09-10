@@ -31,7 +31,7 @@ def evaluate_folder(answer, dirpath):
     logging.debug('Evaluating folder: %s', dirpath)
 
     for path in Path(dirpath).rglob('distribution/**/*'):
-        logging.debug('\tEvaluating: %s', path.name)
+        logging.debug('\tEvaluating: %s'% path.name)
 
         if os.path.isfile(path):
             parent_dir = path.parent
@@ -72,9 +72,9 @@ def search_measure_info(path, measure_info_path, answer):
     closest_matches = [key for key in keys if key.split(':')[0] in path.name]
 
     if len(closest_matches) > 0:
-        logging.debug('Closest matches: %s', closest_matches)
+        logging.debug('Closest matches: %s'% closest_matches)
         matched_keys = [measure_info[match] for match in closest_matches]
-        logging.debug('Matched keys found: %s', matched_keys)
+        logging.debug('Matched keys found: %s'% matched_keys)
         return matched_keys
     else:
         logging.debug('No matches found!')
@@ -99,7 +99,7 @@ def main(root, test=False):
         logging.debug(file)
         dirpath = os.path.join(root, file)
         if os.path.isdir(dirpath):
-            logging.debug('%s is a related directory', (dirpath))
+            logging.debug('%s is a related directory'% (dirpath))
             evaluate_folder(answer, dirpath)
     answer['count'] = len(answer['data'])
 
