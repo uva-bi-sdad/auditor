@@ -23,17 +23,15 @@ def get_md5(filepath):
     return hashlib.md5(open(filepath, 'rb').read()).hexdigest()
 
 
-def evaluate_folder(data, answer, dirpath):
+def evaluate_folder(answer, dirpath):
     '''
-    Given a directory, add all file information into data
+    Given a directory, add all file information into answer['data']
     Assume if it is under a distribution folder, to store the manifest for this data
     '''
-    logging.debug('Evaluating folder: %s' % dirpath)
-
-    measure_not_found_count = 0
+    logging.debug('Evaluating folder: %s', dirpath)
 
     for path in Path(dirpath).rglob('distribution/**/*'):
-        logging.debug('\tEvaluating: %s' % path.name)
+        logging.debug('\tEvaluating: %s', path.name)
 
         if os.path.isfile(path):
             parent_dir = path.parent
@@ -49,23 +47,24 @@ def evaluate_folder(data, answer, dirpath):
             # Check if there is a manifest file. If so, then try to append the measure info
             if path.name.split('.')[-1] in settings.FILE_EXTENSION_TO_MEASURE_INFO and 'measure_info.json' in os.listdir(parent_dir):
                 measure_data = search_measure_info(
-                    path, os.path.join(parent_dir, 'measure_info.json'))
+                    path, os.path.join(parent_dir, 'measure_info.json'), answer)
                 if measure_data is not None:
                     to_append['measure_info'] = measure_data
                 else:
-                    to_append['measure_info'] = 'No match found'
-                    measure_not_found_count += 1
+                    answer['measure_not_found'] += 1
                 logging.debug('-' * 80)
-                data.append(to_append)
-        answer['measure_not_found'] += measure_not_found_count
+                answer['data'].append(to_append)
 
 
-def search_measure_info(path, measure_info_path):
+def search_measure_info(path, measure_info_path, answer):
     '''
     Find the measure info that match the file, then append that element to the data. Disregard if the final value is less than the cutoff
     '''
     with open(measure_info_path, 'r') as f:
         measure_info = json.load(f)
+
+    if '_references' in measure_info:
+        answer['_references'].update(measure_info['_references'])
 
     keys = measure_info.keys()
     logging.debug(path.name)
@@ -73,9 +72,9 @@ def search_measure_info(path, measure_info_path):
     closest_matches = [key for key in keys if key.split(':')[0] in path.name]
 
     if len(closest_matches) > 0:
-        logging.debug('Closest matches: %s' % closest_matches)
+        logging.debug('Closest matches: %s', closest_matches)
         matched_keys = [measure_info[match] for match in closest_matches]
-        logging.debug('Matched keys found: %s' % matched_keys)
+        logging.debug('Matched keys found: %s', matched_keys)
         return matched_keys
     else:
         logging.debug('No matches found!')
@@ -90,29 +89,28 @@ def main(root, test=False):
     answer = {
         'name': os.path.basename(root),
         'measure_not_found': 0,
+        'count': 0,
+        'utc_audited': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+        'data': [],
+        '_references': {}
     }
 
-    data = []
     for file in os.listdir(root):
         logging.debug(file)
         dirpath = os.path.join(root, file)
         if os.path.isdir(dirpath):
-            logging.debug('%s is a related directory' % (dirpath))
-            evaluate_folder(data, answer, dirpath)
+            logging.debug('%s is a related directory', (dirpath))
+            evaluate_folder(answer, dirpath)
+    answer['count'] = len(answer['data'])
 
-    # Addubg metadata
-    answer['data'] = data
-    answer['count'] = len(data)
-    answer['utc_audited'] = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-
-    logging.info('Manifest file: %s' %
+    logging.info('Manifest file: %s',
                  json.dumps(answer, indent=4, sort_keys=True))
     # export the file to root
     if not test:
         export_file = os.path.join(root, 'manifest.json')
         with open(export_file, 'w') as f:
-            json.dump(answer, f)
-        logging.info('[%s] Manifest file created' %
+            json.dump(answer, f, indent=2)
+        logging.info('[%s] Manifest file created',
                      os.path.isfile(export_file))
 
 
@@ -134,7 +132,7 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     if not os.path.isdir(args.input_root):
-        logging.info('%s is not a directory' % (args.input_root))
+        logging.info('%s is not a directory', (args.input_root))
     else:
-        logging.info('Auditing: %s' % os.path.abspath(args.input_root))
+        logging.info('Auditing: %s', os.path.abspath(args.input_root))
         main(args.input_root, args.test)

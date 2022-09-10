@@ -132,3 +132,6 @@ dmypy.json
 data/*
 manifest.json
 sdad_data_auditor/*
+
+# VSCode
+.vscode
