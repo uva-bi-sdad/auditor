@@ -61,7 +61,8 @@ def evaluate_folder(answer, dirpath):
                 else:
                     answer["measure_not_found"] += 1
                 logging.debug("-" * 80)
-                answer["data"].append(to_append)
+            # regardless of whether a measure info is found, you should still append the md5
+            answer["data"].append(to_append)
 
 
 def search_measure_info(path, measure_info_path, answer):
