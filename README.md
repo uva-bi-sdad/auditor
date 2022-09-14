@@ -5,6 +5,7 @@
 
 Timeline:
 ---
+- **2022-09-14**: Updating to track md5 on all files, but not check for measures unless it matches suffixes in the settings
 - **2022-09-07**: Auditor bug-fixes; split on ':' inside measure_info, and split on '.' for filename
 - **2022-08-29**: Add auditor and test one repo versus two repo models
 - **2022-08-23**: In the generation of the manifest, add in measure info data
