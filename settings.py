@@ -1,1 +1,1 @@
-FILE_EXTENSION_TO_MEASURE_INFO = ['xz', 'csv']
+SUFFIX_TO_MEASURE = [".xz", ".csv"]

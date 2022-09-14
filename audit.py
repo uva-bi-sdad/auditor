@@ -45,10 +45,13 @@ def evaluate_folder(answer, dirpath):
 
             measure_data = None
             # Check if there is a manifest file. If so, then try to append the measure info
-            if path.name.split(".")[
-                -1
-            ] in settings.FILE_EXTENSION_TO_MEASURE_INFO and "measure_info.json" in os.listdir(
-                parent_dir
+            logging.debug(
+                "[%s] checking %s in suffix list"
+                % (path.suffix in settings.SUFFIX_TO_MEASURE, path.suffix)
+            )
+            if (
+                path.suffix in settings.SUFFIX_TO_MEASURE
+                and "measure_info.json" in os.listdir(parent_dir)
             ):
                 measure_data = search_measure_info(
                     path, os.path.join(parent_dir, "measure_info.json"), answer
@@ -63,7 +66,7 @@ def evaluate_folder(answer, dirpath):
 
 def search_measure_info(path, measure_info_path, answer):
     """
-    Find the measure info that match the file, then append that element to the data. Disregard if the final value is less than the cutoff
+    Find the measure info that match the file, then append that element to the data
     """
     with open(measure_info_path, "r") as f:
         measure_info = json.load(f)
@@ -74,7 +77,9 @@ def search_measure_info(path, measure_info_path, answer):
     keys = measure_info.keys()
     logging.debug(path.name)
     logging.debug(keys)
-    closest_matches = [key for key in keys if key.split(":")[0] in path.name]
+    closest_matches = [
+        key for key in keys if key.split(":")[0] in path.name
+    ]  # the measure is ':' delimited, and the first element
 
     if len(closest_matches) > 0:
         logging.debug("Closest matches: %s" % closest_matches)
