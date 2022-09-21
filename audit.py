@@ -75,21 +75,23 @@ def search_measure_info(path, measure_info_path, answer):
     if "_references" in measure_info:
         answer["_references"].update(measure_info["_references"])
 
-    keys = measure_info.keys()
-    logging.debug(path.name)
-    logging.debug(keys)
-    closest_matches = [
-        key for key in keys if key.split(":")[0] in path.name
-    ]  # the measure is ':' delimited, and the first element
+    logging.debug(measure_info)
+    if len(measure_info) > 0:
+        keys = measure_info.keys()
+        logging.debug(path.name)
+        logging.debug(keys)
+        closest_matches = [
+            key for key in keys if key.split(":")[0] in path.name
+        ]  # the measure is ':' delimited, and the first element
 
-    if len(closest_matches) > 0:
-        logging.debug("Closest matches: %s" % closest_matches)
-        matched_keys = [measure_info[match] for match in closest_matches]
-        logging.debug("Matched keys found: %s" % matched_keys)
-        return matched_keys
-    else:
-        logging.debug("No matches found!")
-        return
+        if len(closest_matches) > 0:
+            logging.debug("Closest matches: %s" % closest_matches)
+            matched_keys = [measure_info[match] for match in closest_matches]
+            logging.debug("Matched keys found: %s" % matched_keys)
+            return matched_keys
+        else:
+            logging.debug("No matches found!")
+            return
 
 
 def main(root, test=False):
