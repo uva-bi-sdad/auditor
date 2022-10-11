@@ -7,6 +7,10 @@ from pathlib import Path
 from difflib import SequenceMatcher
 import settings
 from datetime import datetime
+from string import Template
+import pandas as pd
+import traceback
+import json
 
 """
 Given the path to a directory, generate a manifest file
@@ -23,6 +27,41 @@ def get_md5(filepath):
     return hashlib.md5(open(filepath, "rb").read()).hexdigest()
 
 
+def try_create_placeholder_measure_info(path):
+    '''
+    Given a file and a directory with no measure infos, create a placeholder
+    conditions: filename is true, and file is a csv data frame that contains the required columns
+    '''
+    logging.info('trying to create placeholder measure_info')
+    try:
+        assert os.path.isfile(str(path.resolve()))
+        df = pd.read_csv(path)
+
+        columns_required = ['measure', 'measure_type']
+
+        # check if columns exist
+        assert set(columns_required).issubset(df.columns), 'file columns %s do not contain %s' % (list(df.columns), columns_required)
+
+        # now check if those columns only have one measure and one measure_type
+        assert len(df['measure'].unique()) == 1,  "%s found more than one meausre"%df['measure'].unique() 
+        assert len(df['measure_type'].unique()) == 1, "%s found more than one measure_type"%df['measure_type'].unique() 
+
+        with open('measure_info_template.json', 'r') as f:
+            s = f.read()
+        t = Template(s)
+        data = t.substitute(filename=path.name, measure=df['measure'].unique()[0], measure_type=df['measure_type'].unique()[0])
+        logging.debug(data)
+        data=json.loads(data)
+        logging.debug(data)
+
+        export_file_name = os.path.join(path.parent.resolve(), 'measure_info.json')
+        logging.debug('Exporting placeholder measure_info file into: %s' % export_file_name)
+        with open(export_file_name, 'w') as f:
+            json.dump(data, f, indent=4)
+        return True
+    except:
+        logging.debug(traceback.print_exc())
+
 def evaluate_folder(answer, dirpath):
     """
     Given a directory, add all file information into answer['data']
@@ -33,36 +72,47 @@ def evaluate_folder(answer, dirpath):
     for path in Path(dirpath).rglob("distribution/**/*"):
         logging.debug("\tEvaluating: %s" % path.name)
 
-        if os.path.isfile(path):
-            parent_dir = path.parent
-            to_append = {
-                "name": path.name,
-                # Append the raw github location, add the repository name after, and then add the path under the repository
-                "path": os.path.relpath(path),
-                "md5": get_md5(path),
-                "size": os.path.getsize(path),
-            }
+        if not os.path.isfile(path):
+            continue
 
-            measure_data = None
-            # Check if there is a manifest file. If so, then try to append the measure info
-            logging.debug(
-                "[%s] checking %s in suffix list"
-                % (path.suffix in settings.SUFFIX_TO_MEASURE, path.suffix)
+        parent_dir = path.parent
+        to_append = {
+            "name": path.name,
+            # Append the raw github location, add the repository name after, and then add the path under the repository
+            "path": os.path.relpath(path),
+            "md5": get_md5(path),
+            "size": os.path.getsize(path),
+        }
+
+        measure_data = None
+        # Check if there is a manifest file. If so, then try to append the measure info
+        logging.debug(
+            "[%s] checking %s in suffix list"
+            % (path.suffix in settings.SUFFIX_TO_MEASURE, path.suffix)
+        )
+        if ( # if the file suffix does not needs to be measured
+            not path.suffix in settings.SUFFIX_TO_MEASURE
+        ):
+            continue 
+
+        if "measure_info.json" in os.listdir(parent_dir): # check to see if there is a measure_info file
+            measure_data = search_measure_info(
+                path, os.path.join(parent_dir, "measure_info.json"), answer
             )
-            if (
-                path.suffix in settings.SUFFIX_TO_MEASURE
-                and "measure_info.json" in os.listdir(parent_dir)
-            ):
-                measure_data = search_measure_info(
-                    path, os.path.join(parent_dir, "measure_info.json"), answer
-                )
-                if measure_data is not None:
-                    to_append["measure_info"] = measure_data
-                else:
-                    answer["measure_not_found"] += 1
-                logging.debug("-" * 80)
-            # regardless of whether a measure info is found, you should still append the md5
-            answer["data"].append(to_append)
+            if measure_data is not None:
+                to_append["measure_info"] = measure_data
+                answer['measures_found'] += 1
+            else:
+                answer['measure_to_check'].append(str(path))
+                
+        else: # if there is no measure_info file, try to create one
+            auto_measure = try_create_placeholder_measure_info(path)
+            if auto_measure is not None:
+                answer['measure_generated'].append(str(path))
+
+        logging.debug("-" * 80)
+        # regardless of whether a measure info is found, you should still append the md5
+        answer["data"].append(to_append)
 
 
 def search_measure_info(path, measure_info_path, answer):
@@ -101,10 +151,12 @@ def main(root, test=False):
     root = os.path.abspath(root)
     answer = {
         "name": os.path.basename(root),
-        "measure_not_found": 0,
         "count": 0,
         "utc_audited": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "data": [],
+        'measure_generated': [],
+        'measure_to_check': [],
+        'measures_found': 0,
         "_references": {},
     }
 
@@ -116,6 +168,7 @@ def main(root, test=False):
             evaluate_folder(answer, dirpath)
     answer["count"] = len(answer["data"])
 
+    # logging.debug(answer) # too large
     logging.info("Manifest file: %s", json.dumps(answer, indent=4, sort_keys=True))
     # export the file to root
     if not test:

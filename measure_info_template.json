@@ -1,0 +1,20 @@
+{
+  "category": "",
+  "measure_table": "$filename",
+  "full_name": "",
+  "measure": "$measure", 
+  "type": "$measure_type", 
+  "short_name": "", 
+  "long_name": "",
+  "short_description": "",
+  "long_description": "",
+  "statement": "", 
+  "equity_category": "",
+  "sources": [
+    {
+      "name": "",
+      "date_accessed": 1969,
+      "url": ""
+    }
+  ]
+}
