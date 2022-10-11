@@ -28,39 +28,52 @@ def get_md5(filepath):
 
 
 def try_create_placeholder_measure_info(path):
-    '''
+    """
     Given a file and a directory with no measure infos, create a placeholder
     conditions: filename is true, and file is a csv data frame that contains the required columns
-    '''
-    logging.info('trying to create placeholder measure_info')
+    """
+    logging.info("trying to create placeholder measure_info")
     try:
         assert os.path.isfile(str(path.resolve()))
         df = pd.read_csv(path)
 
-        columns_required = ['measure', 'measure_type']
+        columns_required = ["measure", "measure_type"]
 
         # check if columns exist
-        assert set(columns_required).issubset(df.columns), 'file columns %s do not contain %s' % (list(df.columns), columns_required)
+        assert set(columns_required).issubset(
+            df.columns
+        ), "file columns %s do not contain %s" % (list(df.columns), columns_required)
 
         # now check if those columns only have one measure and one measure_type
-        assert len(df['measure'].unique()) == 1,  "%s found more than one meausre"%df['measure'].unique() 
-        assert len(df['measure_type'].unique()) == 1, "%s found more than one measure_type"%df['measure_type'].unique() 
+        assert len(df["measure"].unique()) == 1, (
+            "%s found more than one meausre" % df["measure"].unique()
+        )
+        assert len(df["measure_type"].unique()) == 1, (
+            "%s found more than one measure_type" % df["measure_type"].unique()
+        )
 
-        with open('measure_info_template.json', 'r') as f:
+        with open("measure_info_template.json", "r") as f:
             s = f.read()
         t = Template(s)
-        data = t.substitute(filename=path.name, measure=df['measure'].unique()[0], measure_type=df['measure_type'].unique()[0])
+        data = t.substitute(
+            filename=path.name,
+            measure=df["measure"].unique()[0],
+            measure_type=df["measure_type"].unique()[0],
+        )
         logging.debug(data)
-        data=json.loads(data)
+        data = json.loads(data)
         logging.debug(data)
 
-        export_file_name = os.path.join(path.parent.resolve(), 'measure_info.json')
-        logging.debug('Exporting placeholder measure_info file into: %s' % export_file_name)
-        with open(export_file_name, 'w') as f:
+        export_file_name = os.path.join(path.parent.resolve(), "measure_info.json")
+        logging.debug(
+            "Exporting placeholder measure_info file into: %s" % export_file_name
+        )
+        with open(export_file_name, "w") as f:
             json.dump(data, f, indent=4)
         return True
     except:
         logging.debug(traceback.print_exc())
+
 
 def evaluate_folder(answer, dirpath):
     """
@@ -90,25 +103,27 @@ def evaluate_folder(answer, dirpath):
             "[%s] checking %s in suffix list"
             % (path.suffix in settings.SUFFIX_TO_MEASURE, path.suffix)
         )
-        if ( # if the file suffix does not needs to be measured
+        if (  # if the file suffix does not needs to be measured
             not path.suffix in settings.SUFFIX_TO_MEASURE
         ):
-            continue 
+            continue
 
-        if "measure_info.json" in os.listdir(parent_dir): # check to see if there is a measure_info file
+        if "measure_info.json" in os.listdir(
+            parent_dir
+        ):  # check to see if there is a measure_info file
             measure_data = search_measure_info(
                 path, os.path.join(parent_dir, "measure_info.json"), answer
             )
             if measure_data is not None:
                 to_append["measure_info"] = measure_data
-                answer['measures_found'] += 1
+                answer["measures_found"].append(str(path))
             else:
-                answer['measure_to_check'].append(str(path))
-                
-        else: # if there is no measure_info file, try to create one
+                answer["no_match_in_measures_info"].append(str(path))
+
+        else:  # if there is no measure_info file, try to create one
             auto_measure = try_create_placeholder_measure_info(path)
             if auto_measure is not None:
-                answer['measure_generated'].append(str(path))
+                answer["measure_generated"].append(str(path))
 
         logging.debug("-" * 80)
         # regardless of whether a measure info is found, you should still append the md5
@@ -154,9 +169,9 @@ def main(root, test=False):
         "count": 0,
         "utc_audited": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "data": [],
-        'measure_generated': [],
-        'measure_to_check': [],
-        'measures_found': 0,
+        "measure_generated": [],
+        "no_match_in_measures_info": [],
+        "measures_found": [],
         "_references": {},
     }
 
