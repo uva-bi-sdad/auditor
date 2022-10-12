@@ -1,20 +1,20 @@
 {
-  "category": "",
-  "measure_table": "$filename",
-  "full_name": "",
-  "measure": "$measure", 
-  "type": "$measure_type", 
-  "short_name": "", 
-  "long_name": "",
-  "short_description": "",
-  "long_description": "",
-  "statement": "", 
-  "equity_category": "",
-  "sources": [
-    {
-      "name": "",
-      "date_accessed": 1969,
-      "url": ""
-    }
-  ]
+    "category": "",
+    "measure_table": "<insert filename here>",
+    "full_name": "",
+    "measure": "<insert measure here>",
+    "type": "<insert measure type here>",
+    "short_name": "",
+    "long_name": "",
+    "short_description": "",
+    "long_description": "",
+    "statement": "",
+    "equity_category": "",
+    "sources": [
+        {
+            "name": "",
+            "date_accessed": 2022,
+            "url": ""
+        }
+    ]
 }
