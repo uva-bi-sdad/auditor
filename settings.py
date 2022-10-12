@@ -9,3 +9,4 @@ MEASURE_COLS = [
     "measure_type",
     "measure_units",
 ]
+DATA_REPO_DIRS = ["code", "data", "docs"]
