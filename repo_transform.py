@@ -18,7 +18,7 @@ def enforce_directory(root, dir, test):
     """
     # if the doc, data, or code directory does not exist, make one
     dir_path = os.path.join(root, dir)
-    logging.info("\tEnforcing directory for: %s" % dir_path)
+    logging.info("Checking directory for: %s" % dir_path)
 
     if not os.path.isdir(dir_path):
         logging.info("\tGenerating directory %s" % dir_path)
