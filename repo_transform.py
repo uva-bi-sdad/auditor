@@ -10,10 +10,60 @@ from pprint import pprint
 import pandas as pd
 
 
+def enforce_directory(root, dir, test):
+    """
+    assuming you are in a repository like data, docs, or code
+    Check if "distribution" is in the folder. If not, create one and put an empty temp file in it.
+    Otherwise, skip and don't do anything
+    """
+    # if the doc, data, or code directory does not exist, make one
+    dir_path = os.path.join(root, dir)
+    logging.info("Checking directory for: %s" % dir_path)
+
+    if not os.path.isdir(dir_path):
+        logging.info("\tGenerating directory %s" % dir_path)
+        if not test:
+            os.makedirs(dir_path)
+
+    # if the distribution directory does not exist, make one
+    sub_dir_file = os.path.join(dir_path, "distribution")
+    if not os.path.isdir(sub_dir_file):
+        logging.info("\t\tGenerating distribution directory: %s" % sub_dir_file)
+        os.makedirs(sub_dir_file)
+
+    # if inside there are no files, create a placeholder
+    if len(os.listdir(sub_dir_file)) == 0:
+        logging.info("\t\t\tGenerating placeholder empty file: %s/temp" % sub_dir_file)
+        open(os.path.join(sub_dir_file, "temp"), "w").close()
+
+
+def generate_placeholder_folders(root_dir, test):
+    """
+    If a file is found under distribution, go one layer up and see if it is missing from settings.DATA_REPO_DIRS
+    """
+    logging.info("=" * 80)
+    for path in Path(root_dir).rglob("*/distribution/**/*"):
+        for i in range(3):  # search 3 layers up
+            grandparent_dir = path.parents[i].resolve()
+
+            if (
+                len(
+                    set(settings.DATA_REPO_DIRS).intersection(
+                        os.listdir(grandparent_dir)
+                    )
+                )
+                > 0
+            ):
+                logging.info("Grandparent: %s" % grandparent_dir)
+                for dir in settings.DATA_REPO_DIRS:
+                    enforce_directory(grandparent_dir, dir, test)
+
+
 def create_placeholder_measures_info(root_dir, test):
     """
     If a file suffix is found under a distribution under a data directory and measure_info does not exist, create a temporary one
     """
+    logging.info("=" * 80)
     measure_info_generated = []
     for path in Path(root_dir).rglob("data/distribution/**/*"):
         logging.info("Checking %s" % path)
@@ -96,5 +146,6 @@ if __name__ == "__main__":
     if not os.path.isdir(args.input_root):
         logging.info("%s is not a directory", (args.input_root))
     else:
-        logging.info("Auditing: %s", os.path.abspath(args.input_root))
+        logging.info("Transforming: %s", os.path.abspath(args.input_root))
         create_placeholder_measures_info(args.input_root, args.test)
+        generate_placeholder_folders(args.input_root, args.test)
