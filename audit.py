@@ -8,11 +8,11 @@ from datetime import datetime
 import util
 from pprint import pprint
 
+
 """
 Given the path to a directory, generate a manifest file
 [Finding files recursively] https://stackoverflow.com/questions/2186525/how-to-use-glob-to-find-files-recursively
 """
-
 
 def evaluate_folder(answer, dirpath):
     """
@@ -27,6 +27,7 @@ def evaluate_folder(answer, dirpath):
         if not os.path.isfile(path):
             # if path is not a file, skip to the next file to check
             continue
+
         parent_dir = path.parent
         to_append = {
             "name": path.name,
@@ -112,6 +113,9 @@ def main(root, test=False):
         "count": 0,
         "utc_audited": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "data": [],
+        "measure_generated": [],
+        "no_match_in_measures_info": [],
+        "measures_found": [],
         "_references": {},
     }
 
@@ -123,6 +127,7 @@ def main(root, test=False):
             evaluate_folder(answer, dirpath)
     answer["count"] = len(answer["data"])
 
+    # logging.debug(answer) # too large
     logging.info("Manifest file: %s", json.dumps(answer, indent=4, sort_keys=True))
     # export the file to root
     if not test:
