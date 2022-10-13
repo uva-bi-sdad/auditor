@@ -82,8 +82,10 @@ def create_placeholder_measures_info(root_dir, test):
         logging.debug("-" * 80)
         logging.debug("Conditions met")
         # if the file does exists but not the measure info
+        scriptpath = Path(os.path.realpath(__file__))
+
         with open(
-            os.path.join(os.path.realpath(__file__), "measure_info_template.json"), "r"
+            os.path.join(scriptpath.parent.resolve(), "measure_info_template.json"), "r"
         ) as f:
             measure_info = json.load(f)
 
