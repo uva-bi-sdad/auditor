@@ -14,6 +14,7 @@ Given the path to a directory, generate a manifest file
 [Finding files recursively] https://stackoverflow.com/questions/2186525/how-to-use-glob-to-find-files-recursively
 """
 
+
 def evaluate_folder(answer, dirpath):
     """
     Given a directory, add all file information into answer['data']
@@ -113,9 +114,6 @@ def main(root, test=False):
         "count": 0,
         "utc_audited": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "data": [],
-        "measure_generated": [],
-        "no_match_in_measures_info": [],
-        "measures_found": [],
         "_references": {},
     }
 
