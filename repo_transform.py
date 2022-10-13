@@ -109,7 +109,7 @@ def create_placeholder_measures_info(root_dir, test):
             mi = measure_info.copy()
             mi["measure_table"] = path.name
             mi["measure"] = measure
-            mi["type"] = None
+            mi["type"] = ""
             try:
                 # because sometimes the path is empty
                 mi["type"] = df[df["measure"] == measure]["measure_type"].unique()[0]
