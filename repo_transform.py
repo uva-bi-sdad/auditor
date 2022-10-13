@@ -106,17 +106,22 @@ def create_placeholder_measures_info(root_dir, test):
         measures = sorted(df["measure"].unique())
         final = []
         for measure in measures:
-            mi = measure_info.copy()
-            mi["measure_table"] = path.name
-            mi["measure"] = measure
-            mi["type"] = ""
             try:
-                # because sometimes the path is empty
-                mi["type"] = df[df["measure"] == measure]["measure_type"].unique()[0]
+                mi = measure_info.copy()
+                mi["measure_table"] = path.name
+                mi["measure"] = measure
+                mi["type"] = ""
+                try:
+                    # because sometimes the path is empty
+                    mi["type"] = df[df["measure"] == measure]["measure_type"].unique()[
+                        0
+                    ]
+                except:
+                    pass
+                pprint(mi)
+                final.append(mi)
             except:
-                pass
-            pprint(mi)
-            final.append(mi)
+                logging.debug("Error happened for measure: %s" % measure)
 
         export_measure_info_path = os.path.join(
             parent_dir.resolve(), "measure_info.json"
