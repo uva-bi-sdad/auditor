@@ -103,10 +103,10 @@ def create_placeholder_measures_info(root_dir, test):
         logging.debug("columns: %s" % df.columns)
         logging.debug(measure_info)
 
-        measures = sorted(df["measure"].unique())
         final = []
-        for measure in measures:
-            try:
+        if "measure" in df.columns:
+            measures = sorted(df["measure"].unique())
+            for measure in measures:
                 mi = measure_info.copy()
                 mi["measure_table"] = path.name
                 mi["measure"] = measure
@@ -120,8 +120,6 @@ def create_placeholder_measures_info(root_dir, test):
                     pass
                 pprint(mi)
                 final.append(mi)
-            except:
-                logging.debug("Error happened for measure: %s" % measure)
 
         export_measure_info_path = os.path.join(
             parent_dir.resolve(), "measure_info.json"
