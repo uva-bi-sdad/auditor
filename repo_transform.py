@@ -212,14 +212,15 @@ if __name__ == "__main__":
         logging.info("%s is not a directory", (args.input_root))
     else:
         logging.info("Transforming: %s", os.path.abspath(args.input_root))
+        
+        if args.fix_measure_lists:
+            fix_list_measure_infos(args.input_root, args.test)
+
+        if args.delete_empty_measures:
+            delete_all_empty_measure_infos(args.input_root, args.test)
+
         if args.make_measures:
             create_placeholder_measures_info(args.input_root, args.test)
         
         if args.generate_folders:
             generate_placeholder_folders(args.input_root, args.test)
-
-        if args.fix_measure_lists:
-            fix_list_measure_infos(args.input_root, args.test)
-        
-        if args.delete_empty_measures:
-            delete_all_empty_measure_infos(args.input_root, args.test)
