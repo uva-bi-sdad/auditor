@@ -69,7 +69,10 @@ def search_measure_info(path, measure_info_path, answer):
     if len(measure_info) > 0:
         # there are two different formats of measure_info files, so look recurisvely for the measure table instead
         tables = util._finditems(measure_info, "measure_table")
-        matches = [table for table in tables if table == path.name.split(".")[0]]
+        logging.info('[%s] Found tables: %s ' % (len(tables),tables))
+        logging.info(path.name)
+        
+        matches = [table for table in tables if path.name.split('.')[0] in table]
 
         logging.info("searching: %s" % path.name.split(".")[0])
         logging.info("\ttables: %s" % tables)
@@ -82,21 +85,24 @@ def search_measure_info(path, measure_info_path, answer):
 
             # a dictionary containing lists of parsed elements, assuming 1:1 between key and value
             ad = {}
-            for k in util.MEASURE_KEYS:
+            for k in settings.MEASURE_KEYS:
                 ad[k] = util._finditems(measure_info, k)
                 # print("%s: %s" % (k, len(ad[k])))
             # pprint(ad)
             for i in range(len(tables)):
-                if not tables[i] == path.name.split(".")[0]:  # if there is a match
+                if not tables[i] == path.name.split(".")[0]:  # if there is no table match, skip
+                    logging.debug('%s == %s' % (tables[i], path.name.split('.')[0]))
+                    logging.debug('Skipping')
                     continue
                 d = {}
-                for key in util.MEASURE_KEYS:
+                for key in settings.MEASURE_KEYS:
                     if len(ad[key]) > i:  # because sometimes this value is empty
                         d[key] = ad[key][i]
                     else:
                         d[key] = []
+                    logging.debug('[%s]: %s' % (key, ad[key]))
                 matched_keys.append(d)
-                logging.debug("Matched keys found: %s" % matched_keys)
+            logging.debug("Matched keys found: %s" % matched_keys)
             return matched_keys
         else:
             logging.debug("No matches found!")

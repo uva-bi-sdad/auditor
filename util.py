@@ -10,20 +10,6 @@ import json
 
 # since measure_info files have two different formats, use recursion to look for measure_table is version agnostic
 
-MEASURE_KEYS = [
-    "category",
-    "measure_table",
-    "full_name",
-    "measure",
-    "type",
-    "short_name",
-    "long_name",
-    "short_description",
-    "long_description",
-    "statement",
-    "equity_category",
-    "sources",
-]
 
 
 def _finditems(obj, key):

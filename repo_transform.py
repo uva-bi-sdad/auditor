@@ -1,13 +1,70 @@
+from dataclasses import replace
 import os
 import argparse
 import json
 import logging
 from pathlib import Path
+import traceback
 import settings
 from datetime import datetime
 import util
 from pprint import pprint
 import pandas as pd
+import os
+
+def delete_all_empty_measure_infos(root_dir, test):
+    """
+    If a file suffix is found under a distribution under a data directory and measure_info does not exist, create a temporary one
+    """
+    logging.info("=" * 80)
+    measure_info_deleted = []
+    for path in Path(root_dir).rglob("data/distribution/**/*"):
+        parent_dir = path.parent
+        if "measure_info.json" in os.listdir(parent_dir):
+            measure_path = os.path.abspath(os.path.join(parent_dir, "measure_info.json"))
+            if os.stat(measure_path).st_size <= 0 :
+                os.remove(measure_path)
+                measure_info_deleted.append(measure_path)
+    logging.info('[%s] Empty measure files deleted: %s' % (len(measure_info_deleted), measure_info_deleted))
+
+def fix_list_measure_infos(root_dir, test):
+    """
+    If a file suffix is found under a distribution under a data directory and measure_info does not exist, create a temporary one
+    """
+    logging.info("=" * 80)
+    measure_info_generated = []
+    for path in Path(root_dir).rglob("data/distribution/**/*"):
+        logging.info("Checking %s" % path)
+        parent_dir = path.parent
+        logging.debug(
+            "\t[%s]: %s" % (not path.suffix in settings.SUFFIX_TO_MEASURE, path.suffix)
+        )
+        logging.debug(
+            "\t[%s]: %s" % ("measure_info.json" in os.listdir(parent_dir), parent_dir)
+        )
+        if "measure_info.json" in os.listdir(parent_dir):
+            measure_path = os.path.abspath(os.path.join(parent_dir, "measure_info.json"))
+            logging.info('checking: %s' % measure_path)
+            fix_list_measure_info(measure_path)
+
+def fix_list_measure_info(measure_info_path):
+    if os.stat(measure_info_path).st_size > 0 : # if the file size is larger than 0
+        with open(measure_info_path, "r") as f:
+            measure_info = json.load(f)
+        replacement = {}
+        print(measure_info)
+        if isinstance(measure_info, list):
+            logging.info('-'*80)
+            logging.info('Malformed list measure info found: %s' % measure_info)
+            for e in measure_info:
+                if 'measure' in e:
+                    logging.info('Measure found in %s' % e)
+                    replacement[e['measure']] = e
+
+            logging.info('Replacement: %s' % replacement)
+            with open(measure_info_path, "w") as f:
+                json.dump(replacement, f,indent=4, sort_keys=True)
+            logging.info('Fixed list measure_info: %s '% measure_info_path)
 
 
 def enforce_directory(root, dir, test):
@@ -90,25 +147,16 @@ def create_placeholder_measures_info(root_dir, test):
             measure_info = json.load(f)
 
         df = pd.read_csv(path.resolve())
-
-        # if there are more columns than prescribed, remove it
-        # if not set(df.columns) == set(settings.MEASURE_COLS):
-        #     logging.debug("=" * 80)
-        #     logging.debug("Column difference found: %s" % path.resolve())
-        #     df = df[settings.MEASURE_COLS]
-        #     if not test:
-        #         df.to_csv(path.resolve(), index=False)
-
         logging.debug(df)
         logging.debug("columns: %s" % df.columns)
         logging.debug(measure_info)
 
-        final = []
+        final = {}
         if "measure" in df.columns:
             measures = sorted(df["measure"].unique())
             for measure in measures:
                 mi = measure_info.copy()
-                mi["measure_table"] = path.name
+                mi["measure_table"] = path.name.split('.')[0]
                 mi["measure"] = measure
                 mi["type"] = ""
                 try:
@@ -119,10 +167,11 @@ def create_placeholder_measures_info(root_dir, test):
                 except:
                     pass
                 pprint(mi)
-                final.append(mi)
+                final[measure] = mi
+                # final.append(mi)
 
         export_measure_info_path = os.path.join(
-            parent_dir.resolve(), "measure_info.json"
+            parent_dir.resolve(), "measure_info_%s.json" % mi['measure_table']
         )
         logging.info("Placeing measure_info into %s" % export_measure_info_path)
         measure_info_generated.append(export_measure_info_path)
@@ -146,6 +195,10 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument("-v", "--verbose", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-m", "--make_measures", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-g", "--generate_folders", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-f", "--fix_measure_lists", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-d", "--delete_empty_measures", action=argparse.BooleanOptionalAction)
     parser.add_argument("-t", "--test", action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
@@ -159,5 +212,14 @@ if __name__ == "__main__":
         logging.info("%s is not a directory", (args.input_root))
     else:
         logging.info("Transforming: %s", os.path.abspath(args.input_root))
-        create_placeholder_measures_info(args.input_root, args.test)
-        generate_placeholder_folders(args.input_root, args.test)
+        if args.make_measures:
+            create_placeholder_measures_info(args.input_root, args.test)
+        
+        if args.generate_folders:
+            generate_placeholder_folders(args.input_root, args.test)
+
+        if args.fix_measure_lists:
+            fix_list_measure_infos(args.input_root, args.test)
+        
+        if args.delete_empty_measures:
+            delete_all_empty_measure_infos(args.input_root, args.test)
