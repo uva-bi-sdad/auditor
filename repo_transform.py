@@ -222,8 +222,8 @@ def merge_temp_measure_infos(root_dir):
                     combined[k].append(m[k])
                 else:
                     combined[k] = [m[k]]
-        print("-" * 80)
-        pprint(combined)
+        logging.info("-" * 80)
+        logging.info(combined)
 
         # Save a measure_info file
         with open(os.path.join(parent, "measure_info.json"), "w") as f:
@@ -234,7 +234,9 @@ def merge_temp_measure_infos(root_dir):
             for file in measure_parents[temp_measure]:
                 filepath = file.resolve()
                 os.remove(filepath)
-                print("[%s] Deleting %s" % (not os.path.isfile(filepath), filepath))
+                logging.info(
+                    "[%s] Deleting %s" % (not os.path.isfile(filepath), filepath)
+                )
 
 
 if __name__ == "__main__":
