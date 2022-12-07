@@ -13,6 +13,19 @@ import pandas as pd
 import os
 
 
+def exception_handler(func):
+    def wrapper(*args, **kwargs):
+        try:
+            print("-" * 80)
+            func(*args, **kwargs)
+            print("-" * 80)
+        except Exception:
+            print(traceback.format_exc())
+
+    return wrapper
+
+
+@exception_handler
 def delete_all_empty_measure_infos(root_dir, test):
     """
     If a file suffix is found under a distribution under a data directory and measure_info does not exist, create a temporary one
@@ -34,6 +47,7 @@ def delete_all_empty_measure_infos(root_dir, test):
     )
 
 
+@exception_handler
 def fix_list_measure_infos(root_dir, test):
     """
     If a file suffix is found under a distribution under a data directory and measure_info does not exist, create a temporary one
@@ -104,6 +118,7 @@ def enforce_directory(root, dir, test):
         open(os.path.join(sub_dir_file, "temp"), "w").close()
 
 
+@exception_handler
 def generate_placeholder_folders(root_dir, test):
     """
     If a file is found under distribution, go one layer up and see if it is missing from settings.DATA_REPO_DIRS
@@ -126,6 +141,7 @@ def generate_placeholder_folders(root_dir, test):
                     enforce_directory(grandparent_dir, dir, test)
 
 
+@exception_handler
 def create_placeholder_measures_info(root_dir, test):
     """
     If a file suffix is found under a distribution under a data directory and measure_info does not exist, create a temporary one
@@ -195,6 +211,7 @@ def create_placeholder_measures_info(root_dir, test):
     )
 
 
+@exception_handler
 def merge_temp_measure_infos(root_dir):
     """
     Prior measure info generates only a partial one, but they should be merged.
@@ -277,30 +294,20 @@ if __name__ == "__main__":
         if args.fix_measure_lists:
             print("=" * 80)
             print("Fixing list measure_infos")
-            print("=" * 80)
             fix_list_measure_infos(args.input_root, args.test)
-            print("=" * 80)
         if args.delete_empty_measures:
             print("=" * 80)
             print("Deleting empty measure infos")
-            print("=" * 80)
             delete_all_empty_measure_infos(args.input_root, args.test)
-            print("=" * 80)
         if args.make_measures:
             print("=" * 80)
             print("Generating placeholder measure infos")
-            print("=" * 80)
             create_placeholder_measures_info(args.input_root, args.test)
-            print("=" * 80)
         if args.generate_folders:
             print("=" * 80)
             print("Enforcing folder structures")
-            print("=" * 80)
             generate_placeholder_folders(args.input_root, args.test)
-            print("=" * 80)
         if args.merge_measures:
             print("=" * 80)
             print("Enforcing merge measures")
-            print("=" * 80)
             merge_temp_measure_infos(args.input_root)
-            print("=" * 80)
