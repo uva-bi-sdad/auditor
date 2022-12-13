@@ -15,6 +15,18 @@ Given the path to a directory, generate a manifest file
 """
 
 
+def exception_handler(func):
+    def wrapper(*args, **kwargs):
+        try:
+            print("-" * 80)
+            func(*args, **kwargs)
+            print("-" * 80)
+        except Exception:
+            print(traceback.format_exc())
+
+    return wrapper
+
+
 def evaluate_folder(answer, dirpath):
     """
     Given a directory, add all file information into answer['data']
@@ -69,10 +81,10 @@ def search_measure_info(path, measure_info_path, answer):
     if len(measure_info) > 0:
         # there are two different formats of measure_info files, so look recurisvely for the measure table instead
         tables = util._finditems(measure_info, "measure_table")
-        logging.info('[%s] Found tables: %s ' % (len(tables),tables))
+        logging.info("[%s] Found tables: %s " % (len(tables), tables))
         logging.info(path.name)
-        
-        matches = [table for table in tables if path.name.split('.')[0] in table]
+
+        matches = [table for table in tables if path.name.split(".")[0] in table]
 
         logging.info("searching: %s" % path.name.split(".")[0])
         logging.info("\ttables: %s" % tables)
@@ -90,9 +102,11 @@ def search_measure_info(path, measure_info_path, answer):
                 # print("%s: %s" % (k, len(ad[k])))
             # pprint(ad)
             for i in range(len(tables)):
-                if not tables[i] == path.name.split(".")[0]:  # if there is no table match, skip
-                    logging.debug('%s == %s' % (tables[i], path.name.split('.')[0]))
-                    logging.debug('Skipping')
+                if (
+                    not tables[i] == path.name.split(".")[0]
+                ):  # if there is no table match, skip
+                    logging.debug("%s == %s" % (tables[i], path.name.split(".")[0]))
+                    logging.debug("Skipping")
                     continue
                 d = {}
                 for key in settings.MEASURE_KEYS:
@@ -100,7 +114,7 @@ def search_measure_info(path, measure_info_path, answer):
                         d[key] = ad[key][i]
                     else:
                         d[key] = []
-                    logging.debug('[%s]: %s' % (key, ad[key]))
+                    logging.debug("[%s]: %s" % (key, ad[key]))
                 matched_keys.append(d)
             logging.debug("Matched keys found: %s" % matched_keys)
             return matched_keys
@@ -109,6 +123,7 @@ def search_measure_info(path, measure_info_path, answer):
             return
 
 
+@exception_handler
 def main(root, test=False):
     """
     Iterate through each file in the repository and check a hash
