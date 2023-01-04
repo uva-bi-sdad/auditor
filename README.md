@@ -1,5 +1,7 @@
 # Auditor
 
+This repo is canonically different than the testing that happends downstream because it is more intrusive and contains code that can edit/ clean up repositories before they get pushed to the public site
+
 1. Loops through all folders that match ```**/distribution/``` and creates a ```manifest.json``` at the root directory with the: hash, file size (bytes), and file path of each file.
 2. For each file added, search if there is a ```measures_info.json``` in the same directory, and check for a string match of the measure and the file name. If there is a match, append the data match from the ```measures_info.json``` on to the element in ```manifest.json```.
 
