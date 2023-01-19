@@ -22,7 +22,7 @@ def exception_handler(func):
             print("-" * 80)
             func(*args, **kwargs)
             print("-" * 80)
-        except Exception:
+        except Exception as e:
             print(traceback.format_exc())
 
     return wrapper
@@ -69,6 +69,7 @@ def evaluate_folder(answer, dirpath):
         answer["data"].append(to_append)
 
 
+@exception_handler
 def search_measure_info(path, measure_info_path, answer):
     """
     Find the measure info that match the file, then append that element to the data
